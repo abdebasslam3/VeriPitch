@@ -22,7 +22,7 @@ class SkillMatcher:
             raise ValueError("Freelancer skills must be a list.")
 
         self.freelancer_skills = set(
-            str(skill).strip().lower() for skill in freelancer_skills
+            str(skill).strip().lower() for skill in freelancer_skills if str(skill).strip()
         )
 
         # استخدام مسار مطلق لضمان العمل في بيئة Serverless (Netlify Functions)

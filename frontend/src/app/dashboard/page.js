@@ -13,6 +13,10 @@ export default function Dashboard() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
   const handleAnalyze = async () => {
+    if (!jobDesc.trim()) {
+      alert('يرجى إدخال وصف الوظيفة أولاً.');
+      return;
+    }
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/analyze`, {
@@ -161,8 +165,11 @@ export default function Dashboard() {
                       العرض المقترح
                     </h3>
                     <p className="text-slate-300 text-sm leading-relaxed mb-6 relative z-10">
-                      مرحباً، لقد قرأت متطلبات الوظيفة بعناية. أنا أمتلك خبرة قوية في {result.matched?.join(' و ')}.
-                      لقد عملت سابقاً على مشاريع مشابهة تطلبت هذه المهارات، وأنا واثق من قدرتي على تقديم قيمة مضافة لمشروعكم.
+                      {result.matched?.length > 0 ? (
+                        <>مرحباً، لقد قرأت متطلبات الوظيفة بعناية. أنا أمتلك خبرة قوية في {result.matched.join(' و ')}. لقد عملت سابقاً على مشاريع مشابهة تطلبت هذه المهارات، وأنا واثق من قدرتي على تقديم قيمة مضافة لمشروعكم.</>
+                      ) : (
+                        <>مرحباً، لقد اطلعت على متطلبات الوظيفة. رغم أن مهاراتي الحالية قد لا تتطابق تماماً مع الكلمات المفتاحية المذكورة، إلا أنني أمتلك المرونة والقدرة على التعلم السريع وتقديم حلول مبتكرة تلبي احتياجاتكم.</>
+                      )}
                     </p>
                     <button className="w-full bg-white text-slate-900 font-bold py-3 rounded-xl hover:bg-slate-100 transition-colors relative z-10 flex items-center justify-center space-x-2 space-x-reverse">
                       <span>نسخ العرض</span>

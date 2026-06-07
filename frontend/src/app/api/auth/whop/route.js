@@ -28,7 +28,7 @@ export async function GET(request) {
     // const user = await whop.users.me({ accessToken: tokenResponse.access_token });
 
     // 3. Redirect user back to dashboard or home with success
-    const dashboardUrl = new URL('/', request.nextUrl.origin);
+    const dashboardUrl = new URL('/dashboard', request.nextUrl.origin);
     dashboardUrl.searchParams.set('auth', 'success');
 
     return NextResponse.redirect(dashboardUrl);
