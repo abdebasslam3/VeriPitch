@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict
 from core.matcher import SkillMatcher
@@ -9,6 +10,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI(title="VeriPitch API")
+
+# Enable CORS for frontend integration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # In production, restrict this to your domain
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Initialize clients
 whop_client = WhopClient()
@@ -29,6 +38,8 @@ async def analyze_job(request: JobAnalysisRequest):
     try:
         matcher = SkillMatcher(request.freelancer_skills)
         result = matcher.analyze_job(request.job_description)
+        # Here we could call an LLM to generate a more complex proposal
+        # based on the matched skills.
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
