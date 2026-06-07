@@ -1,54 +1,100 @@
+import re
+import logging
+import json
+import os
 from typing import List, Dict, Set
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
+
 class SkillMatcher:
-    def __init__(self, freelancer_skills: List[str]):
+    """
+    SkillMatcher Class
+    Matches freelancer skills against job descriptions with high accuracy,
+    supporting multi-word skills and technical symbols (e.g., C++, C#, .NET).
+    """
+
+    def __init__(self, freelancer_skills: List[str],
+                 skills_db_path: str = "data/skills.json"):
         """
-        تهيئة المطابق بمهارات المستقل.
+        Initialize the SkillMatcher with freelancer skills and a database path.
         """
-        self.freelancer_skills = set(skill.lower() for skill in freelancer_skills)
+        if not isinstance(freelancer_skills, list):
+            logging.error("Freelancer skills must be provided as a list.")
+            raise ValueError("Freelancer skills must be a list.")
+
+        self.freelancer_skills = set(
+            str(skill).strip().lower() for skill in freelancer_skills
+        )
+        self.common_tech_skills = self._load_skills_db(skills_db_path)
+
+    def _load_skills_db(self, path: str) -> Set[str]:
+        """Loads the common skills database from a JSON file."""
+        try:
+            if not os.path.exists(path):
+                logging.warning(f"Skills database not found at {path}.")
+                return set()
+
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                # Sort skills by length (descending) to match longer phrases first
+                skills = data.get("common_tech_skills", [])
+                return set(skill.lower() for skill in skills)
+        except (json.JSONDecodeError, IOError) as e:
+            logging.error(f"Failed to load or parse skills database: {e}")
+            return set()
 
     def analyze_job(self, job_description: str) -> Dict[str, List[str]]:
         """
-        تحليل وصف الوظيفة ومطابقته مع مهارات المستقل.
-        ملاحظة: هذا نموذج أولي يستخدم مطابقة الكلمات المفتاحية البسيطة.
-        في النسخة النهائية، سيتم استخدام LLM و Embeddings.
+        Analyzes the job description using phrase matching to support multi-word
+        skills and technical symbols.
         """
-        # قائمة تجريبية للمهارات التقنية الشائعة للبحث عنها
-        common_tech_skills = {
-            "python", "javascript", "react", "node.js", "fastapi",
-            "postgresql", "mongodb", "docker", "aws", "html", "css",
-            "typescript", "next.js", "tailwind", "machine learning", "ai"
-        }
+        try:
+            if not job_description:
+                return {"matched": [], "missing": [], "required_all": []}
 
-        job_words = set(job_description.lower().replace(",", "").replace(".", "").split())
+            desc_lower = job_description.lower()
+            found_skills = set()
 
-        # استخراج المهارات المطلوبة في الوظيفة بناءً على القائمة المعروفة لدينا
-        required_skills = job_words.intersection(common_tech_skills)
+            # Iterate through each skill in our database and check if it exists in the description
+            # We use Regex with word boundaries, but allow for trailing symbols like ++ or #
+            for skill in self.common_tech_skills:
+                # Escape the skill for regex (handles + and #)
+                # We use \b at start and a custom boundary at the end to allow symbols
+                escaped_skill = re.escape(skill)
+                # Pattern: start boundary, the skill, end boundary (only if it ends with alphanumeric)
+                if re.search(r'\b' + escaped_skill + r'(?!\w)', desc_lower):
+                    found_skills.add(skill)
 
-        # تحديد المهارات المتطابقة
-        matched_skills = required_skills.intersection(self.freelancer_skills)
+            # Match against freelancer's own skills
+            matched_skills = found_skills.intersection(self.freelancer_skills)
 
-        # تحديد الفجوات (المهارات المطلوبة ولكنها غير موجودة لدى المستقل)
-        missing_skills = required_skills.difference(self.freelancer_skills)
+            # Identify gaps
+            missing_skills = found_skills.difference(self.freelancer_skills)
 
-        return {
-            "matched": list(matched_skills),
-            "missing": list(missing_skills),
-            "required_all": list(required_skills)
-        }
+            return {
+                "matched": sorted(list(matched_skills)),
+                "missing": sorted(list(missing_skills)),
+                "required_all": sorted(list(found_skills))
+            }
+        except Exception as e:
+            logging.exception("An unexpected error occurred during analysis.")
+            return {
+                "error": "Internal analysis error",
+                "matched": [],
+                "missing": [],
+                "required_all": []
+            }
 
-# تجربة بسيطة للنموذج الأولي
+
 if __name__ == "__main__":
-    my_skills = ["Python", "FastAPI", "HTML", "CSS", "PostgreSQL"]
-    job_desc = """
-    We are looking for a Python developer who knows FastAPI and React.
-    Experience with PostgreSQL and Docker is a plus.
-    """
+    example_skills = ["Python", "C++", "Machine Learning"]
+    example_job = "Seeking a C++ developer with Machine Learning and React experience."
 
-    matcher = SkillMatcher(my_skills)
-    result = matcher.analyze_job(job_desc)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(base_dir, "../data/skills.json")
 
-    print("--- نتيجة مطابقة المهارات ---")
-    print(f"المهارات المتوفرة لديك والمتطابقة مع الوظيفة: {result['matched']}")
-    print(f"المهارات المطلوبة ولكنها تنقصك (فجوات): {result['missing']}")
-    print(f"كافة المهارات التقنية المكتشفة في الوظيفة: {result['required_all']}")
+    matcher = SkillMatcher(example_skills, skills_db_path=data_path)
+    report = matcher.analyze_job(example_job)
+    print(f"Match Report: {json.dumps(report, indent=4)}")
