@@ -16,7 +16,7 @@ class SkillMatcher:
     """
 
     def __init__(self, freelancer_skills: List[str],
-                 skills_db_path: str = "data/skills.json"):
+                 skills_db_path: str = None):
         if not isinstance(freelancer_skills, list):
             logging.error("Freelancer skills must be provided as a list.")
             raise ValueError("Freelancer skills must be a list.")
@@ -24,6 +24,12 @@ class SkillMatcher:
         self.freelancer_skills = set(
             str(skill).strip().lower() for skill in freelancer_skills
         )
+
+        # استخدام مسار مطلق لضمان العمل في بيئة Serverless (Netlify Functions)
+        if skills_db_path is None:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            skills_db_path = os.path.join(base_dir, "../data/skills.json")
+
         self.common_tech_skills = self._load_skills_db(skills_db_path)
 
     def _load_skills_db(self, path: str) -> List[str]:
@@ -52,8 +58,7 @@ class SkillMatcher:
             for skill in self.common_tech_skills:
                 escaped_skill = re.escape(skill)
 
-                # Dynamic Boundary:
-                # If skill starts with alpha, use \b. If ends with alpha, use (?!\w)
+                # Dynamic Boundary
                 start_boundary = r'\b' if skill[0].isalnum() else r'(?<!\w)'
                 end_boundary = r'(?!\w)' if skill[-1].isalnum() else r''
 

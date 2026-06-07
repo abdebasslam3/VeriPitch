@@ -8,10 +8,13 @@ export default function Dashboard() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // تحديث الرابط ليتوافق مع التوجيه الجديد في Netlify
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
+
   const handleAnalyze = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/analyze', {
+      const response = await fetch(`${API_URL}/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -22,7 +25,7 @@ export default function Dashboard() {
       const data = await response.json();
       setResult(data);
     } catch (error) {
-      alert('خطأ في الاتصال بالخادم');
+      alert('خطأ في الاتصال بالخادم. يرجى التأكد من تشغيل API.');
     }
     setLoading(false);
   };

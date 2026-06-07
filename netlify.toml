@@ -1,0 +1,16 @@
+[build]
+  command = "cd frontend && npm run build"
+  publish = "frontend/.next"
+
+[functions]
+  directory = "netlify/functions"
+  included_files = ["core/**", "data/**", "main.py", ".env"]
+
+[[redirects]]
+  from = "/api/v1/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[build.environment]
+  PYTHON_VERSION = "3.10"
+  NODE_VERSION = "20"

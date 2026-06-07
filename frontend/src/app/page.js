@@ -1,8 +1,19 @@
+'use client';
+
 import React from 'react';
 
 export default function LoginPage() {
   const WHOP_APP_ID = process.env.NEXT_PUBLIC_WHOP_APP_ID;
-  const REDIRECT_URL = "http://localhost:3000/api/auth/whop";
+
+  // استخدام متغير بيئة للرابط أو تحديد رابط ديناميكي
+  const getRedirectUri = () => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/api/auth/whop`;
+    }
+    return "http://localhost:3000/api/auth/whop";
+  };
+
+  const REDIRECT_URL = getRedirectUri();
 
   return (
     <div style={{
