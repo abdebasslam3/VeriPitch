@@ -6,3 +6,8 @@ __pycache__/
 .coverage
 htmlcov/
 tests/test_skills.json
+.env
+node_modules/
+.next/
+out/
+build/
