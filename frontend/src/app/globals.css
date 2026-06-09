@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1DA1F2;
+  --color-text-dark: #0F172A;
+  --color-bg-snow: #F8FAFC;
+  --color-accent-coral: #FF6B6B;
+  --color-muted-slate: #64748B;
+}
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+}
+
+[dir="rtl"] {
+  text-align: right;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+}

@@ -1,0 +1,21 @@
+[build]
+  command = "cd frontend && npm run build"
+  publish = "frontend/.next"
+
+[functions]
+  included_files = ["core/**", "data/**", "main.py", ".env"]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/v1/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production.environment]
+  PYTHON_VERSION = "3.10"
+  NEXT_PUBLIC_API_URL = "/api/v1"
