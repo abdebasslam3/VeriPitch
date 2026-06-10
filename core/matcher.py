@@ -27,7 +27,8 @@ class SkillMatcher:
         self.freelancer_skills = set(
             str(skill).strip().lower() for skill in freelancer_skills
         )
-        self.common_tech_skills = self._load_skills_db(skills_db_path)
+        # Store as a sorted list to match longer phrases first
+        self.common_tech_skills = sorted(list(self._load_skills_db(skills_db_path)), key=len, reverse=True)
 
     def _load_skills_db(self, path: str) -> Set[str]:
         """Loads the common skills database from a JSON file."""
@@ -38,7 +39,6 @@ class SkillMatcher:
 
             with open(path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                # Sort skills by length (descending) to match longer phrases first
                 skills = data.get("common_tech_skills", [])
                 return set(skill.lower() for skill in skills)
         except (json.JSONDecodeError, IOError) as e:
@@ -47,25 +47,24 @@ class SkillMatcher:
 
     def analyze_job(self, job_description: str) -> Dict[str, List[str]]:
         """
-        Analyzes the job description using phrase matching to support multi-word
-        skills and technical symbols.
+        Analyzes the job description using phrase matching.
+        Uses a 'consumption' approach to avoid matching sub-skills (e.g., matching 'Tailwind' if 'Tailwind CSS' is present).
         """
         try:
             if not job_description:
                 return {"matched": [], "missing": [], "required_all": []}
 
-            desc_lower = job_description.lower()
+            # We use a temporary string and replace matches with placeholders to avoid double-matching
+            desc_temp = job_description.lower()
             found_skills = set()
 
-            # Iterate through each skill in our database and check if it exists in the description
-            # We use Regex with word boundaries, but allow for trailing symbols like ++ or #
             for skill in self.common_tech_skills:
-                # Escape the skill for regex (handles + and #)
-                # We use \b at start and a custom boundary at the end to allow symbols
                 escaped_skill = re.escape(skill)
-                # Pattern: start boundary, the skill, end boundary (only if it ends with alphanumeric)
-                if re.search(r'\b' + escaped_skill + r'(?!\w)', desc_lower):
+                pattern = r'\b' + escaped_skill + r'(?!\w)'
+                if re.search(pattern, desc_temp):
                     found_skills.add(skill)
+                    # Replace found skill with a neutral placeholder to 'consume' it
+                    desc_temp = re.sub(pattern, " [SKILL_MATCH] ", desc_temp)
 
             # Match against freelancer's own skills
             matched_skills = found_skills.intersection(self.freelancer_skills)

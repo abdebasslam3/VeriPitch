@@ -2,8 +2,9 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- جدول المستخدمين والتحقق من اشتراك Whop الصارم (مرتبط بـ auth.users الخاص بـ Supabase)
+-- جدول المستخدمين والتحقق من اشتراك Whop الصارم
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     whop_user_id TEXT UNIQUE NOT NULL,
     email TEXT NOT NULL,
     subscription_status TEXT DEFAULT 'active' CHECK (subscription_status IN ('active', 'inactive', 'cancelled')),

@@ -3,7 +3,7 @@ from core.auth.whop import exchange_code_for_token, get_whop_user, validate_user
 from core.utils.encryption import generate_dynamic_salt
 import os
 
-router = APIRouter(prefix="/api/auth")
+router = APIRouter(prefix="/api/v1/auth")
 
 from supabase import create_client, Client
 
@@ -11,7 +11,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-@router.get("/whop/callback")
+@router.get("/callback")
 async def whop_callback(code: str):
     # 1. Exchange code
     token_data = await exchange_code_for_token(code)
@@ -36,22 +36,19 @@ async def whop_callback(code: str):
     user_res = supabase.table("users").select("*").eq("whop_user_id", whop_user_id).execute()
 
     if not user_res.data:
-        # Create new user in auth.users is complex via service role without password,
-        # so we rely on the whop_user_id as the primary identifier in our custom users table.
-        # For MVP, we'll ensure they exist in our 'users' table.
-        # Note: In a real Supabase Auth setup, you'd use their Auth API.
+        # Create new user
         new_user = {
-            "id": str(os.urandom(16).hex()), # Placeholder UUID if not using Supabase Auth fully
             "whop_user_id": whop_user_id,
             "email": email,
             "subscription_status": "active"
         }
-        # In production, 'id' should be a real UUID linked to auth.users if possible
-        # For now we use a workaround to satisfy the schema or modify schema to allow non-auth users
-        supabase.table("users").insert(new_user).execute()
+        # Let Supabase generate the UUID
+        res = supabase.table("users").insert(new_user).execute()
 
-        # Initialize profile
-        supabase.table("profiles").insert({"user_id": new_user["id"]}).execute()
+        if res.data:
+            user_uuid = res.data[0]["id"]
+            # Initialize profile
+            supabase.table("profiles").insert({"user_id": user_uuid}).execute()
     else:
         # Update status
         supabase.table("users").update({"subscription_status": "active"}).eq("whop_user_id", whop_user_id).execute()
