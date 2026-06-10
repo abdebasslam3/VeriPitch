@@ -20,6 +20,7 @@ export default function DashboardLayout({
 }) {
   const [lang, setLang] = useState('ar');
   const [isRTL, setIsRTL] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   useEffect(() => {
     document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
@@ -32,11 +33,11 @@ export default function DashboardLayout({
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: lang === 'ar' ? 'لوحة التحكم' : 'Dashboard' },
-    { icon: UserCircle, label: lang === 'ar' ? 'الملف الشخصي' : 'Profile' },
-    { icon: FileText, label: lang === 'ar' ? 'مولد العروض' : 'Proposal Gen' },
-    { icon: ShieldCheck, label: lang === 'ar' ? 'الاختبار الذكي' : 'Smart Quiz' },
-    { icon: Settings, label: lang === 'ar' ? 'الإعدادات' : 'Settings' },
+    { id: 'dashboard', icon: LayoutDashboard, label: lang === 'ar' ? 'لوحة التحكم' : 'Dashboard' },
+    { id: 'profile', icon: UserCircle, label: lang === 'ar' ? 'الملف الشخصي' : 'Profile' },
+    { id: 'proposals', icon: FileText, label: lang === 'ar' ? 'مولد العروض' : 'Proposal Gen' },
+    { id: 'quiz', icon: ShieldCheck, label: lang === 'ar' ? 'الاختبار الذكي' : 'Smart Quiz' },
+    { id: 'settings', icon: Settings, label: lang === 'ar' ? 'الإعدادات' : 'Settings' },
   ];
 
   return (
@@ -54,12 +55,13 @@ export default function DashboardLayout({
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-4">
-          {menuItems.map((item, idx) => (
+          {menuItems.map((item) => (
             <button
-              key={idx}
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                idx === 0
+                activeTab === item.id
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-slate hover:bg-bg-snow hover:text-text-dark"
               )}
@@ -105,8 +107,21 @@ export default function DashboardLayout({
 
         {children}
         <div className="space-y-8">
-          <ProfileBuilder />
-          <ProposalGenerator />
+          {activeTab === 'dashboard' && (
+            <div className="grid grid-cols-1 gap-8">
+               <ProposalGenerator />
+            </div>
+          )}
+          {activeTab === 'profile' && <ProfileBuilder />}
+          {activeTab === 'proposals' && <ProposalGenerator />}
+          {activeTab === 'settings' && <SettingsView />}
+          {activeTab === 'quiz' && (
+            <div className="bg-white p-8 rounded-2xl text-center border border-muted-slate/10">
+              <ShieldCheck size={48} className="mx-auto text-primary mb-4" />
+              <h3 className="text-xl font-bold text-text-dark">نظام الاختبار الذكي</h3>
+              <p className="text-muted-slate mt-2">اختر مهارة من ملفك الشخصي لتوثيقها عبر اختبار MCQ عميق.</p>
+            </div>
+          )}
         </div>
       </main>
     </div>
@@ -115,3 +130,9 @@ export default function DashboardLayout({
 
 import ProposalGenerator from './ProposalGenerator';
 import ProfileBuilder from './ProfileBuilder';
+import SettingsView from './SettingsView';
+
+export const metadata = {
+  title: 'VeriPitch | Dashboard',
+  description: 'Manage your profile and generate verified proposals.',
+}

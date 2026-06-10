@@ -3,7 +3,7 @@
   publish = "frontend/.next"
 
 [functions]
-  included_files = ["core/**", "data/**", "main.py", ".env"]
+  included_files = ["core/**", "data/**", "main.py"]
   node_bundler = "esbuild"
 
 [[redirects]]
@@ -11,10 +11,7 @@
   to = "/.netlify/functions/api/:splat"
   status = 200
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Next.js handles its own routing, so we don't need a catch-all to index.html
 
 [context.production.environment]
   PYTHON_VERSION = "3.10"

@@ -4,7 +4,7 @@ import hashlib
 import hmac
 from supabase import create_client, Client
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1")
 
 WHOP_WEBHOOK_SECRET = os.getenv("WHOP_WEBHOOK_SECRET")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -12,7 +12,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-@router.post("/api/webhooks/whop")
+@router.post("/webhooks/whop")
 async def whop_webhook(request: Request):
     signature = request.headers.get("x-whop-signature")
     if not signature:
