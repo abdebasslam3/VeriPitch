@@ -115,3 +115,8 @@ export default function DashboardLayout({
 
 import ProposalGenerator from './ProposalGenerator';
 import ProfileBuilder from './ProfileBuilder';
+
+export const metadata = {
+  title: 'VeriPitch | Dashboard',
+  description: 'Manage your profile and generate verified proposals.',
+}
